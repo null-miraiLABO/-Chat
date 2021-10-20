@@ -1,0 +1,36 @@
+body {
+  background-color: #e3dbd0;
+}
+
+h1 {
+  text-align: center;
+}
+
+form {
+  position: fixed;
+  bottom: 50px;
+  right: 70px;
+  color: #707070;
+  font-size: 20px;
+}
+
+input {
+  height: 30px;
+  width: 250px;
+}
+
+textarea {
+  height: 140px;
+  width: 250px;
+}
+
+p {
+  background-color: #ffffec;
+  border-radius: 5px;
+  box-sizing: border-box;
+  padding: 20px;
+}
+
+span {
+  font-weight: 700;
+}
