@@ -8,7 +8,7 @@ h1 {
 
 form {
   position: fixed;
-  bottom: 50px;
+  bottom: 30px;
   right: 70px;
   color: #707070;
   font-size: 20px;
@@ -24,7 +24,7 @@ textarea {
   width: 250px;
 }
 
-p {
+.element {
   background-color: #ffffec;
   border-radius: 5px;
   box-sizing: border-box;
