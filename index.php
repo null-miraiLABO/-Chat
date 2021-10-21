@@ -25,9 +25,21 @@ if($_SESSION["nm"]!="" && $_SESSION["msg"]!=""){
         newdata($_SESSION["nm"],$_SESSION["msg"],date('Y/m/d H:i:s'),$_SERVER["REMOTE_ADDR"]);
 }
 
-$db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat`",null);
+//dbから消去
+if(isset($_GET['del']) && $_GET['del']!=""){
+        queryrunpre("DELETE FROM `nmmsg_chat` WHERE `id` ='".$_GET['del']."'",null);
+}
+
+//もし、$_GET['selname']がセットされていたら名前ごとに抽出
+if(isset($_GET['selname']) && $_GET['selname']!=""){
+        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` WHERE `name` ='".$_GET['selname']."'",null);
+}else{
+        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat`",null);
+}
+
+//db_chatdata配列がなくなるまで置き換える
 for($i=0;$i<count($db_chatdata);$i+=1){
-        $viewchat .= viewchat($db_chatdata[$i]["name"],$db_chatdata[$i]["date"],$db_chatdata[$i]["message"]);
+        $viewchat .= viewchat($db_chatdata[$i]["id"],$db_chatdata[$i]["name"],$db_chatdata[$i]["date"],$db_chatdata[$i]["message"]);
 }
 
 $htmldata=file_get_contents($INDEX_HTML);
@@ -56,8 +68,8 @@ function newdata($name,$message,$date,$ip)
         queryrunpre($insert_query,null);
 }
 
-function viewchat($nm,$date,$msg){
-  $htmldata="<p><span>名前:".$nm."</span>&nbsp;".$date."</br>".$msg."</p>";
+function viewchat($id,$nm,$date,$msg){
+  $htmldata="<p><span>名前:<a href='?selname=".$nm."'>".$nm."</a></span>&nbsp;".$date."&nbsp;<a href='?del=".$id."'>"."消去"."</a></br>".$msg."</p>";
   return $htmldata;
 }
 ?>
