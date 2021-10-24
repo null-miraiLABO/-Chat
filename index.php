@@ -32,16 +32,38 @@ if(isset($_GET['del']) && $_GET['del']!=""){
         queryrunpre("DELETE FROM `nmmsg_chat` WHERE `id` ='".$_GET['del']."'",null);
 }
 
+//ページごとに表示
+//$_GET['p']の初期値を1に
 if( !isset($_GET['p']) || !is_numeric($_GET['p']) || $_GET['p']<1 ){
         $_GET['p']=1;
 }
 $lower = ($_GET['p']-1) * $OnceView;
-//$db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` LIMIT ".$upper,null);
 $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` LIMIT ".$lower.",".$OnceView,null);
 
 //もし、$_GET['selname']がセットされていたら名前ごとに抽出
 if(isset($_GET['selname']) && $_GET['selname']!=""){
         $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` WHERE `name` ='".$_GET['selname']."'",null);
+}
+
+//時間,名前をソート抽出
+if(isset($_GET['sort']) && $_GET['sort']!=""){
+        switch($_GET['sort']){
+                case "0":
+                        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `id` ASC LIMIT ".$lower.",".$OnceView,null);
+                        break;
+                case "1":
+                        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `date` ASC LIMIT ".$lower.",".$OnceView,null);
+                        break;
+                case "2":
+                        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `date` DESC LIMIT ".$lower.",".$OnceView,null);
+                        break;
+                case "3":
+                        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `name` ASC LIMIT ".$lower.",".$OnceView,null);
+                        break;
+                case "4":
+                        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `name` DESC LIMIT ".$lower.",".$OnceView,null);
+                        break;
+        }
 }
 
 //db_chatdata配列がなくなるまで置き換える
@@ -56,16 +78,24 @@ $count=$cn_tmp[0][0];
 
 if($_GET['p']>=2){
         $nmb=$_GET['p']-1;
-        $PageLink[]='<a href="?p='.$nmb.'">前へ</a>';
+        $PageLink[]='<a href="?p='.$nmb.'&sort='.$_GET['sort'].'">前へ</a>';
 }
 if($lower+$OnceView<=$count){
         $nma=$_GET['p']+1;
-        $PageLink[]='<a href="?p='.$nma.'">次へ</a>';
+        $PageLink[]='<a href="?p='.$nma.'&sort='.$_GET['sort'].'">次へ</a>';
+}
+
+//ページ数の表示
+$PageNumber=array();
+$flag = ($count/$OnceView)+1;
+for($i=1;$i<$flag;$i++){
+        $PageNumber[$i]='&nbsp;<a href="?p='.$i.'&sort='.$_GET['sort'].'">'.$i.'</a>&nbsp;';
 }
 
 $htmldata=file_get_contents($INDEX_HTML);
+$htmldata=str_replace("{{Ppar}}",$_GET['p'],$htmldata);
 $htmldata=str_replace("{{Chat}}",$viewchat,$htmldata);
-$htmldata=str_replace("{{Page}}",'<p>'.implode('｜',$PageLink).'</p>',$htmldata);
+$htmldata=str_replace("{{Page}}",'<p>'.$PageLink[0]."&nbsp;&nbsp;".implode('｜',$PageNumber)."&nbsp;&nbsp;".$PageLink[1].'</p>',$htmldata);
 
 //チェック用。本番不要
 $check="low=".$lower."<br>"."page=".$_GET['p']."<br>"."count=".$count."<br>";
