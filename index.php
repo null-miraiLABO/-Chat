@@ -6,6 +6,7 @@ session_regenerate_id(true);
 
 //各ソースパス
 $INDEX_HTML="src/index.html";
+$CHAT_HTML="src/chat.html";
 
 //設定部
 $user ="db_mizukinet";//サーバーの設定による
@@ -20,11 +21,10 @@ $db = new PDO($dsn,$user,$password);
 $_SESSION["nm"]=$_POST["nm"];
 $_SESSION["msg"]=$_POST["msg"];
 
-$OnceView=10;
-
 //chatデータ、読み込み、chat置き換え
 if($_SESSION["nm"]!="" && $_SESSION["msg"]!=""){
-        newdata($_SESSION["nm"],$_SESSION["msg"],date('Y/m/d H:i:s'),$_SERVER["REMOTE_ADDR"]);
+        $msg=str_replace(array("\r\n","\r","\n"),'<br>', htmlspecialchars($_POST['msg']));//改行
+        newdata($_SESSION["nm"],$msg,date('Y/m/d H:i:s'),$_SERVER["REMOTE_ADDR"]);
 }
 
 //dbから消去
@@ -32,8 +32,8 @@ if(isset($_GET['del']) && $_GET['del']!=""){
         queryrunpre("DELETE FROM `nmmsg_chat` WHERE `id` ='".$_GET['del']."'",null);
 }
 
-//ページごとに表示
-//$_GET['p']の初期値を1に
+//ページ表示。$OnceView個毎
+$OnceView=10;
 if( !isset($_GET['p']) || !is_numeric($_GET['p']) || $_GET['p']<1 ){
         $_GET['p']=1;
 }
@@ -71,8 +71,8 @@ for($i=0;$i<count($db_chatdata);$i+=1){
         $viewchat .= viewchat($db_chatdata[$i]["id"],$db_chatdata[$i]["name"],$db_chatdata[$i]["date"],$db_chatdata[$i]["message"]);
 }
 
+//ページリンクの生成(前へ,次へ)
 $PageLink=array();
-
 $cn_tmp=queryrunpre("SELECT COUNT(*) FROM `nmmsg_chat`",null);
 $count=$cn_tmp[0][0];
 
@@ -85,7 +85,8 @@ if($lower+$OnceView<=$count){
         $PageLink[]='<a href="?p='.$nma.'&sort='.$_GET['sort'].'">次へ</a>';
 }
 
-//ページ数の表示
+//ページリンクの生成(ページ数)
+//ページ総数$countを$OnceView毎に分ける
 $PageNumber=array();
 $flag = ($count/$OnceView)+1;
 for($i=1;$i<$flag;$i++){
@@ -96,10 +97,6 @@ $htmldata=file_get_contents($INDEX_HTML);
 $htmldata=str_replace("{{Ppar}}",$_GET['p'],$htmldata);
 $htmldata=str_replace("{{Chat}}",$viewchat,$htmldata);
 $htmldata=str_replace("{{Page}}",'<p>'.$PageLink[0]."&nbsp;&nbsp;".implode('｜',$PageNumber)."&nbsp;&nbsp;".$PageLink[1].'</p>',$htmldata);
-
-//チェック用。本番不要
-$check="low=".$lower."<br>"."page=".$_GET['p']."<br>"."count=".$count."<br>";
-echo $check;
 
 echo $htmldata;
 
@@ -124,9 +121,22 @@ function newdata($name,$message,$date,$ip)
         queryrunpre($insert_query,null);
 }
 
+//chatデータをchat.html上で置き換え
 function viewchat($id,$nm,$date,$msg){
-  $htmldata='<p class="element"><span>名前:<a href="?selname='.$nm.'">'.$nm.'</a></span>&nbsp;'.$date.'&nbsp;<a href="?del='.$id.'">'.'消去'.'</a></br>'.$msg.'</p>';
-  return $htmldata;
+global $CHAT_HTML;
+$htmldata=file_get_contents($CHAT_HTML);
+
+$data = array(
+        "{{Name}}"=>"$nm",
+        "{{Date}}"=>"$date",
+        "{{Id}}"=>"$id",
+        "{{Msg}}"=>"$msg"
+);
+foreach($data as $key=>$value){
+        $htmldata=str_replace($key,$value,$htmldata);
+}
+
+return $htmldata;
 }
 
 ?>

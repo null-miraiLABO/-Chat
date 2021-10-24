@@ -28,7 +28,8 @@ textarea {
   background-color: #ffffec;
   border-radius: 5px;
   box-sizing: border-box;
-  padding: 20px;
+  padding: 5px;
+  margin: 10px;
 }
 
 span {
