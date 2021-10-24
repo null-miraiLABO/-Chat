@@ -9,10 +9,10 @@ $INDEX_HTML="src/index.html";
 $CHAT_HTML="src/chat.html";
 
 //設定部
-$user ="db_mizukinet";//サーバーの設定による
-$password = "4CBEpHSn";//サーバーの設定による
-$dbname = "db_mizukinet_1";//サーバーの設定による
-$dbtable = "nmmsg_chat";//ここは自分で指定するところ
+$user ="db_mizukinet";
+$password = "4CBEpHSn";
+$dbname = "db_mizukinet_1";
+$dbtable = "nmmsg_chat";
 
 //データベース初期化部
 $dsn  = "mysql:host=localhost;charset=utf8;dbname=".$dbname;
@@ -21,7 +21,7 @@ $db = new PDO($dsn,$user,$password);
 $_SESSION["nm"]=$_POST["nm"];
 $_SESSION["msg"]=$_POST["msg"];
 
-//chatデータ、読み込み、chat置き換え
+//新規作成
 if($_SESSION["nm"]!="" && $_SESSION["msg"]!=""){
         $msg=str_replace(array("\r\n","\r","\n"),'<br>', htmlspecialchars($_POST['msg']));//改行
         newdata($_SESSION["nm"],$msg,date('Y/m/d H:i:s'),$_SERVER["REMOTE_ADDR"]);
@@ -32,38 +32,37 @@ if(isset($_GET['del']) && $_GET['del']!=""){
         queryrunpre("DELETE FROM `nmmsg_chat` WHERE `id` ='".$_GET['del']."'",null);
 }
 
+
 //ページ表示。$OnceView個毎
 $OnceView=10;
 if( !isset($_GET['p']) || !is_numeric($_GET['p']) || $_GET['p']<1 ){
         $_GET['p']=1;
 }
 $lower = ($_GET['p']-1) * $OnceView;
-$db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` LIMIT ".$lower.",".$OnceView,null);
+
+//1.時間昇順,2.時間降順,3.名前昇順,4.名前降順,d.リセットやそれ以外
+switch($_GET['sort']){
+        case "1":
+                $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `date` ASC LIMIT ".$lower.",".$OnceView,null);
+                break;
+        case "2":
+                $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `date` DESC LIMIT ".$lower.",".$OnceView,null);
+                break;
+        case "3":
+                $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `name` ASC LIMIT ".$lower.",".$OnceView,null);
+                break;
+        case "4":
+                $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `name` DESC LIMIT ".$lower.",".$OnceView,null);
+                break;
+        default:
+                $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `id` ASC LIMIT ".$lower.",".$OnceView,null);
+                break;
+}
 
 //もし、$_GET['selname']がセットされていたら名前ごとに抽出
 if(isset($_GET['selname']) && $_GET['selname']!=""){
-        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` WHERE `name` ='".$_GET['selname']."'",null);
-}
-
-//時間,名前をソート抽出
-if(isset($_GET['sort']) && $_GET['sort']!=""){
-        switch($_GET['sort']){
-                case "0":
-                        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `id` ASC LIMIT ".$lower.",".$OnceView,null);
-                        break;
-                case "1":
-                        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `date` ASC LIMIT ".$lower.",".$OnceView,null);
-                        break;
-                case "2":
-                        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `date` DESC LIMIT ".$lower.",".$OnceView,null);
-                        break;
-                case "3":
-                        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `name` ASC LIMIT ".$lower.",".$OnceView,null);
-                        break;
-                case "4":
-                        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `name` DESC LIMIT ".$lower.",".$OnceView,null);
-                        break;
-        }
+        //$db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` WHERE `name` ='".$_GET['selname']."'",null);
+        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` WHERE `name` ='".$_GET['selname']."' ORDER BY `id` ASC LIMIT ".$lower.",".$OnceView,null);
 }
 
 //db_chatdata配列がなくなるまで置き換える
@@ -71,18 +70,22 @@ for($i=0;$i<count($db_chatdata);$i+=1){
         $viewchat .= viewchat($db_chatdata[$i]["id"],$db_chatdata[$i]["name"],$db_chatdata[$i]["date"],$db_chatdata[$i]["message"]);
 }
 
+
 //ページリンクの生成(前へ,次へ)
 $PageLink=array();
 $cn_tmp=queryrunpre("SELECT COUNT(*) FROM `nmmsg_chat`",null);
+if(isset($_GET['selname']) && $_GET['selname']!=""){
+        $cn_tmp=queryrunpre("SELECT COUNT(*) FROM `nmmsg_chat` WHERE `name` ='".$_GET['selname']."'",null);
+}
 $count=$cn_tmp[0][0];
 
 if($_GET['p']>=2){
         $nmb=$_GET['p']-1;
-        $PageLink[]='<a href="?p='.$nmb.'&sort='.$_GET['sort'].'">前へ</a>';
+        $PageLink[]='<a href="?p='.$nmb.'&sort='.$_GET['sort'].'&selname='.$_GET['selname'].'">前へ</a>';
 }
 if($lower+$OnceView<=$count){
         $nma=$_GET['p']+1;
-        $PageLink[]='<a href="?p='.$nma.'&sort='.$_GET['sort'].'">次へ</a>';
+        $PageLink[]='<a href="?p='.$nma.'&sort='.$_GET['sort'].'&selname='.$_GET['selname'].'">次へ</a>';
 }
 
 //ページリンクの生成(ページ数)
@@ -90,7 +93,12 @@ if($lower+$OnceView<=$count){
 $PageNumber=array();
 $flag = ($count/$OnceView)+1;
 for($i=1;$i<$flag;$i++){
-        $PageNumber[$i]='&nbsp;<a href="?p='.$i.'&sort='.$_GET['sort'].'">'.$i.'</a>&nbsp;';
+        if($i==$_GET['p']){//表示中のページはリンク付けない
+                $PageNumber[$i]='&nbsp;'.$i.'&nbsp;';
+        }else{
+                $PageNumber[$i]='&nbsp;<a href="?p='.$i.'&sort='.$_GET['sort'].'&selname='.$_GET['selname'].'">'.$i.'</a>&nbsp;';
+        }
+
 }
 
 $htmldata=file_get_contents($INDEX_HTML);
