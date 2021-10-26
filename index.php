@@ -25,6 +25,8 @@ $_SESSION["msg"]=$_POST["msg"];
 if($_SESSION["nm"]!="" && $_SESSION["msg"]!=""){
         $msg=str_replace(array("\r\n","\r","\n"),'<br>', htmlspecialchars($_POST['msg']));//改行
         newdata($_SESSION["nm"],$msg,date('Y/m/d H:i:s'),$_SERVER["REMOTE_ADDR"]);
+}else if($_SERVER["REQUEST_METHOD"]=='POST'){
+        $_SESSION['Err'].="※入力してください";
 }
 
 //dbから消去
@@ -61,7 +63,6 @@ switch($_GET['sort']){
 
 //もし、$_GET['selname']がセットされていたら名前ごとに抽出
 if(isset($_GET['selname']) && $_GET['selname']!=""){
-        //$db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` WHERE `name` ='".$_GET['selname']."'",null);
         $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` WHERE `name` ='".$_GET['selname']."' ORDER BY `id` ASC LIMIT ".$lower.",".$OnceView,null);
 }
 
@@ -102,9 +103,12 @@ for($i=1;$i<$flag;$i++){
 }
 
 $htmldata=file_get_contents($INDEX_HTML);
+$htmldata=str_replace("{{Err}}",$_SESSION['Err'],$htmldata);
 $htmldata=str_replace("{{Ppar}}",$_GET['p'],$htmldata);
 $htmldata=str_replace("{{Chat}}",$viewchat,$htmldata);
 $htmldata=str_replace("{{Page}}",'<p>'.$PageLink[0]."&nbsp;&nbsp;".implode('｜',$PageNumber)."&nbsp;&nbsp;".$PageLink[1].'</p>',$htmldata);
+
+$_SESSION['Err']="";
 
 echo $htmldata;
 

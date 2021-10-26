@@ -6,6 +6,10 @@ h1 {
   text-align: center;
 }
 
+.err {
+  color: red;
+}
+
 form {
   position: fixed;
   bottom: 30px;
