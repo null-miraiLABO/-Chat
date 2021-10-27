@@ -1,3 +1,3 @@
 # あっと Chat
 
-http://mizukinet.nows.jp/school/db/dbtest/
+http://mizukinet.nows.jp/school/atochat/
