@@ -37,7 +37,7 @@ if( !isset($_GET['p']) || !is_numeric($_GET['p']) || $_GET['p']<1 ){
 }
 $lower = ($_GET['p']-1) * $OnceView;
 
-//1.時間昇順,2.時間降順,3.名前昇順,4.名前降順,d.リセットやそれ以外
+//chat表示順
 switch($_GET['sort']){
         case "1":
                 $sort = "`date` ASC";
@@ -55,19 +55,20 @@ switch($_GET['sort']){
                 $sort = "`id` ASC";
                 break;
 }
-$db_chatdata = queryrunpre("SELECT * FROM ".$dbtable." ORDER BY ".$sort." LIMIT ".$lower.",".$OnceView,null);
 
 //もし、$_GET['selname']がセットされていたら名前ごとに抽出
 if(isset($_GET['selname']) && $_GET['selname']!=""){
         $queryParam[":selname"]=$_GET['selname'];
-        $db_chatdata = queryrunpre("SELECT * FROM ".$dbtable." WHERE `name` = :selname ORDER BY `id` ASC LIMIT ".$lower.",".$OnceView,$queryParam);
+        $dbsel=" WHERE `name` = :selname";
 }
+
+//表示データ
+$db_chatdata = queryrunpre("SELECT * FROM ".$dbtable.$dbsel." ORDER BY ".$sort." LIMIT ".$lower.",".$OnceView,$queryParam);
 
 //db_chatdata配列がなくなるまで置き換える
 for($i=0;$i<count($db_chatdata);$i+=1){
         $viewchat .= viewchat($db_chatdata[$i]["id"],$db_chatdata[$i]["name"],$db_chatdata[$i]["date"],$db_chatdata[$i]["message"]);
 }
-
 
 //ページリンクの生成(前へ,次へ)
 $PageLink=array();
