@@ -24,7 +24,6 @@ if($_SESSION["nm"]!="" && $_SESSION["msg"]!=""){
 
 //dbから消去
 if(isset($_GET['del']) && $_GET['del']!=""){
-        //queryrunpre("DELETE FROM `nmmsg_chat` WHERE `id` ='".$_GET['del']."'",null);
         $dbwhere=" WHERE `id` = :whereid";
         $queryParam[":whereid"]=$_GET['del'];
         queryrunpre("DELETE FROM ".$dbtable.$dbwhere,$queryParam);
@@ -41,30 +40,27 @@ $lower = ($_GET['p']-1) * $OnceView;
 //1.時間昇順,2.時間降順,3.名前昇順,4.名前降順,d.リセットやそれ以外
 switch($_GET['sort']){
         case "1":
-                $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `date` ASC LIMIT ".$lower.",".$OnceView,null);
+                $sort = "`date` ASC";
                 break;
         case "2":
-                $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `date` DESC LIMIT ".$lower.",".$OnceView,null);
+                $sort = "`date` DESC";
                 break;
         case "3":
-                $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `name` ASC LIMIT ".$lower.",".$OnceView,null);
+                $sort = "`name` ASC";
                 break;
         case "4":
-                $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `name` DESC LIMIT ".$lower.",".$OnceView,null);
+                $sort = "`name` DESC";
                 break;
         default:
-                $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `id` ASC LIMIT ".$lower.",".$OnceView,null);
+                $sort = "`id` ASC";
                 break;
 }
-
-/*
-$dborder=" ORDER BY :order";
-$db_chatdata = queryrunpre("SELECT * FROM ".$dbtable.$dborder." LIMIT ".$lower.",".$OnceView,$queryParam);
-*/
+$db_chatdata = queryrunpre("SELECT * FROM ".$dbtable." ORDER BY ".$sort." LIMIT ".$lower.",".$OnceView,null);
 
 //もし、$_GET['selname']がセットされていたら名前ごとに抽出
 if(isset($_GET['selname']) && $_GET['selname']!=""){
-        $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` WHERE `name` ='".$_GET['selname']."' ORDER BY `id` ASC LIMIT ".$lower.",".$OnceView,null);
+        $queryParam[":selname"]=$_GET['selname'];
+        $db_chatdata = queryrunpre("SELECT * FROM ".$dbtable." WHERE `name` = :selname ORDER BY `id` ASC LIMIT ".$lower.",".$OnceView,$queryParam);
 }
 
 //db_chatdata配列がなくなるまで置き換える
@@ -75,9 +71,9 @@ for($i=0;$i<count($db_chatdata);$i+=1){
 
 //ページリンクの生成(前へ,次へ)
 $PageLink=array();
-$cn_tmp=queryrunpre("SELECT COUNT(*) FROM `nmmsg_chat`",null);
+$cn_tmp=queryrunpre("SELECT COUNT(*) FROM ".$dbtable."",null);
 if(isset($_GET['selname']) && $_GET['selname']!=""){
-        $cn_tmp=queryrunpre("SELECT COUNT(*) FROM `nmmsg_chat` WHERE `name` ='".$_GET['selname']."'",null);
+        $cn_tmp=queryrunpre("SELECT COUNT(*) FROM ".$dbtable." WHERE `name` ='".$_GET['selname']."'",null);
 }
 $count=$cn_tmp[0][0];
 
