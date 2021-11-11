@@ -24,7 +24,10 @@ if($_SESSION["nm"]!="" && $_SESSION["msg"]!=""){
 
 //dbから消去
 if(isset($_GET['del']) && $_GET['del']!=""){
-        queryrunpre("DELETE FROM `nmmsg_chat` WHERE `id` ='".$_GET['del']."'",null);
+        //queryrunpre("DELETE FROM `nmmsg_chat` WHERE `id` ='".$_GET['del']."'",null);
+        $dbwhere=" WHERE `id` = :whereid";
+        $queryParam[":whereid"]=$_GET['del'];
+        queryrunpre("DELETE FROM ".$dbtable.$dbwhere,$queryParam);
 }
 
 
@@ -53,6 +56,11 @@ switch($_GET['sort']){
                 $db_chatdata = queryrunpre("SELECT * FROM `nmmsg_chat` ORDER BY `id` ASC LIMIT ".$lower.",".$OnceView,null);
                 break;
 }
+
+/*
+$dborder=" ORDER BY :order";
+$db_chatdata = queryrunpre("SELECT * FROM ".$dbtable.$dborder." LIMIT ".$lower.",".$OnceView,$queryParam);
+*/
 
 //もし、$_GET['selname']がセットされていたら名前ごとに抽出
 if(isset($_GET['selname']) && $_GET['selname']!=""){
@@ -97,7 +105,6 @@ for($i=1;$i<$flag;$i++){
 
 $htmldata=file_get_contents($INDEX_HTML);
 $htmldata=str_replace("{{Err}}",$_SESSION['Err'],$htmldata);
-$htmldata=str_replace("{{Ppar}}",$_GET['p'],$htmldata);
 $htmldata=str_replace("{{Chat}}",$viewchat,$htmldata);
 $htmldata=str_replace("{{Page}}",'<p>'.$PageLink[0]."&nbsp;&nbsp;".implode('｜',$PageNumber)."&nbsp;&nbsp;".$PageLink[1].'</p>',$htmldata);
 
