@@ -92,12 +92,11 @@ if($lower+$OnceView<=$count){
 $PageNumber=array();
 $flag = ($count/$OnceView)+1;
 for($i=1;$i<$flag;$i++){
-        if($i==$_GET['p']){//表示中のページはリンク付けない
+        $PageNumber[$i]='&nbsp;<a href="?p='.$i.'&sort='.$_GET['sort'].'&selname='.$_GET['selname'].'">'.$i.'</a>&nbsp;';
+        //表示中のページはリンク付けない
+        if($i==$_GET['p']){
                 $PageNumber[$i]='&nbsp;'.$i.'&nbsp;';
-        }else{
-                $PageNumber[$i]='&nbsp;<a href="?p='.$i.'&sort='.$_GET['sort'].'&selname='.$_GET['selname'].'">'.$i.'</a>&nbsp;';
         }
-
 }
 
 $htmldata=file_get_contents($INDEX_HTML);
